@@ -1,0 +1,3 @@
+train:
+        batch_size:20
+        seq_len:20
