@@ -9,10 +9,10 @@ func(){
 	--save_dir $3 \
 	--num_episodes $1" > $3/$2.log
 
-    nohup python train.py \
+    nohup python train_lstm.py \
 	    --task_id $2 \
 	    --save_dir $3 \
-	    --num_episodes $1 >> $3/train.log &
+	    --num_episodes $1 > $3/train.log &
 }	
 
 for((i=0;i<$train_num;i++))
