@@ -90,14 +90,64 @@ def train(arglist):
     config=EasyDict(config)
     batch_size=config.train.batch_size
     num_steps=config.train.num_steps
-    
+    hidden_size=config.train.hidden_size
+    num_layers=config.train.num_layers    
+    learning_rate=config.train.learning_rate
+    max_lr_epoch=config.train.max_lr_epoch
+    lr_decay=config.train.lr_decay
+    num_epoches=10
     train_data,valid_data,test_data,word2id,id2word=load_data(arglist.data_path,logger)    
-    batch_producer(train_data,batch_size,num_steps) 
-
     
+    #***************************************************************************
+    #-------------------------------Model---------------------------------------
+    #                                                                          *
+    #***************************************************************************
+
+    training_input=Input(batch_size=batch_size,num_steps=num_steps,data=train_data)
+    model=Model(arglist.task_id,
+                training_input,
+                is_training=True,
+                batch_size=batch_size,
+                num_steps=num_steps,
+                hidden_size=hidden_size,
+                vocab_size=len(word2id),
+                num_layers=num_layers)
+    init_op=tf.global_variables_initializer()
+ 
+    orig_decay=lr_decay
+    model_save_name='my_lstm'
+    with tf.Session() as sess:
+        sess.run([init_op])
+        coord=tf.train.Coordinator()
+        threads=tf.train.start_queue_runners(coord=coord)
+        saver=tf.train.Saver()
+	
+        for epoch in range(arglist.num_episodes):
+            new_lr_decay=orig_decay**max(epoch+1-max_lr_epoch,0.0)
+            model.assign_lr(sess,learning_rate*new_lr_decay)
+            current_state=np.zeros((num_layers,2,batch_size,model.hidden_size))
+            for step in range(training_input.epoch_size):
+                if step%50!=0:
+                    cost,_,current_state=sess.run([model.cost,model.train_op,model.state],feed_dict={model.init_state:current_state})
+                else:
+                    cost,_,current_state,acc=sess.run([model.cost,model.train_op,model.state,model.accuracy],feed_dict={model.init_state:current_state})		
+                    print("Epoch: {}, Step: {}, Cost: {:.3f}, Accuracy: {:.3f}".format(epoch,step,cost,acc))
+
+            saver.save(sess,arglist.data_path+"\\"+model_save_name,global_step=epoch)
+        saver.save(sess,arglist.data_path+"\\"+model_save_name+"_final")
+        coord.request_stop()
+        coord.join(threads)
+
 if __name__ == '__main__':
     arglist=parse_args()
     train(arglist)
+
+
+
+
+
+
+
 
 
 

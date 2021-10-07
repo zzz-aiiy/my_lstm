@@ -19,7 +19,7 @@ for((i=0;i<$train_num;i++))
 do
     export CUDA_VISIBLE_DEVICES=$(($i%8))
     echo "start tack ${i}, CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}}"
-    func 13 ${i} train_dir_rp${i}
+    func $2 ${i} train_dir_rp${i}
     sleep 0.1
 done
 

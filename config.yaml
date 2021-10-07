@@ -1,3 +1,8 @@
 train:
     batch_size: 20
-    num_steps: 20
+    num_steps: 35
+    num_layers: 2
+    hidden_size: 650
+    learning_rate: 1.0
+    max_lr_epoch: 10
+    lr_decay: 0.93
